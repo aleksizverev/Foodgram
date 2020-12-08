@@ -10,6 +10,8 @@ def sign_up(request):
     if request.method == 'POST':
         if form.is_valid():
             user = form.save()
+            user.set_password(user.password)
+            user.save()
             login(request, user)
             return HttpResponseRedirect('/')
     context['form'] = form

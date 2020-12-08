@@ -14,11 +14,12 @@ class Ingredient(models.Model):
 
 
 class Recipe(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recipes')
     title = models.CharField(max_length=256)
     description = models.TextField(max_length=1024)
     cooking_time = models.IntegerField()
     ingredients = models.ManyToManyField(Ingredient, through='RecipeIngredient')
+    pub_date = models.DateTimeField('date published', auto_now_add=True, null=True)
 
     def __str__(self):
         return self.title
