@@ -62,8 +62,12 @@
             <p style="padding: 0 0 2em 0;"><button class="button button_style_light-blue button_size_subscribe" name="subscribe" data-out>Подписаться на автора</button></p>
         </div>
         <div class="card-list" >
+        {% load thumbnail %}
         {% for recipe in profile_recipes %}
                 <div class="card" data-id="120">
+                    {% thumbnail recipe.image "400x220" crop="center" upscale=True as im %}
+                        <a href="#" class="link" target="_blank"><img class="card-img" src="{{ im.url }}"></a>
+                    {% endthumbnail %}
     {#                <a href="#" class="link" target="_blank"><img src="{% static 'images/testCardImg.png' %}" alt="Какой-то текст" class="card__image"></a>#}
                     <div class="card__body">
                         <a class="card__title link" href="#" target="_blank">{{ recipe.title }}</a>
@@ -118,5 +122,3 @@
   <script src="{% static 'authorRecipe.html' %}"></script>
 </body>
 </html>
-
-{#TODO доделать страницу профиля#}

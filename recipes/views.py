@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from .models import Recipe, User
+from .models import Recipe, User, RecipeIngredient
 
 
 def index(request):
@@ -31,6 +31,8 @@ def profile(request, username):
 
 def recipe_view(request, recipe_id):
     recipe = get_object_or_404(Recipe, pk=recipe_id)
-    return render(request, 'singlePageNotAuth.html', {
-        'recipe': recipe
+    ingredients = recipe.recipeingredient_set.all()
+    return render(request, 'recipes/recipe.html', {
+        'recipe': recipe,
+        'ingredients': ingredients
     })
