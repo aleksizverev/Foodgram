@@ -24,7 +24,7 @@
         <div class="card-list">
             {% load thumbnail %}
             {% for recipe in recipes %}
-                <div class="card" data-id="120">
+                <div class="card" data-id={{ recipe.id }}>
                         {% thumbnail recipe.image "400x220" crop="center" upscale=True as im %}
                             <a href="{% url 'recipe_view' recipe.id %}" class="link" target="_blank"><img class="card-img" src="{{ im.url }}"></a>
                         {% endthumbnail %}
