@@ -4,30 +4,39 @@ from django.contrib.auth.decorators import login_required
 from .models import Recipe, User, RecipeIngredient, Ingredient
 from .forms import RecipeForm
 from .utils import get_ingredients
+from django.core.paginator import Paginator
 
 
 def index(request):
-    recipes = Recipe.objects.order_by('-pub_date')[:10]
+    recipes = Recipe.objects.order_by('-pub_date')
+    paginator = Paginator(recipes, 6)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
+
     return render(
         request,
         'recipes/index.html',
         {
             'user': request.user,
-            'recipes': recipes
+            'page': page
         }
     )
 
 
 def profile(request, username):
     profile = get_object_or_404(User, username=username)
-    profile_recipes = profile.recipes.all()
+    profile_recipes = profile.recipes.order_by('-pub_date')
+    paginator = Paginator(profile_recipes, 6)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
+
     return render(
         request,
         'recipes/profile.html',
         {
             'profile': profile,
-            'profile_recipes': profile_recipes
-        },
+            'page': page
+        }
     )
 
 
@@ -39,20 +48,6 @@ def recipe_view(request, recipe_id):
         'ingredients': ingredients
     })
 
-
-# @login_required
-# def new_recipe(request):
-#     if request.method == "POST":
-#         form = RecipeForm(request.POST)
-#         if form.is_valid():
-#             _new_recipe = form.save(commit=False)
-#             _new_recipe.author = request.user
-#             _new_recipe.save()
-#             return redirect("index")
-#         return render(request, "recipes/new_recipe.html", {"form": form})
-#
-#     form = RecipeForm()
-#     return render(request, 'recipes/new_recipe.html', {"form": form})
 
 def ingredients(request):
     query = request.GET.get('query')
@@ -74,6 +69,7 @@ def new_recipe(request):
         ingredients = get_ingredients(request)
 
         if not bool(ingredients):
+            print("Добавьте хотя бы один ингредиент")
             form.add_error(None, "Добавьте хотя бы один ингредиент")
 
         elif form.is_valid():
@@ -94,3 +90,7 @@ def new_recipe(request):
 
     return render(request, 'recipes/new_recipe.html', {
         'form': form, 'new_recipe': new_recipe})
+
+
+def subscriptions(request):
+    pass
