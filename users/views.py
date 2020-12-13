@@ -1,7 +1,8 @@
-from django.shortcuts import render
-from users.forms import CustomCreationForm
 from django.contrib.auth import login
 from django.http import HttpResponseRedirect
+from django.shortcuts import render
+
+from users.forms import CustomCreationForm
 
 
 def sign_up(request):

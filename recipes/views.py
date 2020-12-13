@@ -1,10 +1,14 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse, JsonResponse
+import json
+
 from django.contrib.auth.decorators import login_required
-from .models import Recipe, User, RecipeIngredient, Ingredient
-from .forms import RecipeForm
-from .utils import get_ingredients
 from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views.decorators.http import require_http_methods
+
+from .forms import RecipeForm
+from .models import Recipe, User, RecipeIngredient, Ingredient, Follow
+from .utils import get_ingredients, get_subs_list
 
 
 def index(request):
@@ -18,7 +22,8 @@ def index(request):
         'recipes/index.html',
         {
             'user': request.user,
-            'page': page
+            'page': page,
+            'indx': True
         }
     )
 
@@ -43,9 +48,16 @@ def profile(request, username):
 def recipe_view(request, recipe_id):
     recipe = get_object_or_404(Recipe, pk=recipe_id)
     ingredients = recipe.recipeingredient_set.all()
-    return render(request, 'recipes/recipe.html', {
+    follow_status = None
+    if request.user.username:
+        follow_status = Follow.objects.filter(
+            user=request.user, author=recipe.author).exists()
+
+    return render(request, 'recipes/single_recipe_view.html', {
+        'user': request.user,
         'recipe': recipe,
-        'ingredients': ingredients
+        'ingredients': ingredients,
+        'follow_status': follow_status
     })
 
 
@@ -58,6 +70,29 @@ def ingredients(request):
         data.append({'title': ingredient.title, 'dimension': ingredient.dimension})
 
     return JsonResponse(data, safe=False)
+
+
+@login_required
+@require_http_methods(['POST'])
+def add_subscription(request):
+    author_id = json.loads(request.body).get('id')
+    author = get_object_or_404(User, pk=author_id)
+
+    if author == request.user:
+        return JsonResponse({'success': False})
+
+    Follow.objects.get_or_create(author=author, user=request.user)
+    return JsonResponse({'success': True})
+
+
+@login_required
+@require_http_methods(['DELETE'])
+def remove_subscription(request, author_id):
+    recipe_author = get_object_or_404(User, pk=author_id)
+    if recipe_author == request.user:
+        return JsonResponse({'success': False})
+    Follow.objects.filter(author=recipe_author, user=request.user).delete()
+    return JsonResponse({'success': True})
 
 
 @login_required
@@ -92,5 +127,16 @@ def new_recipe(request):
         'form': form, 'new_recipe': new_recipe})
 
 
-def subscriptions(request):
-    pass
+@login_required
+def user_subscriptions(request):
+    user_sub_list = get_subs_list(request)
+    print(user_sub_list)
+    paginator = Paginator(user_sub_list, 6)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
+
+    return render(request, 'recipes/user_subscriptions.html', {
+        'page': page,
+        'paginator': paginator,
+        'subs': True
+    })

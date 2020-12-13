@@ -1,6 +1,5 @@
 from django import forms
 from django.contrib.auth import get_user_model, password_validation
-from django.core.exceptions import ValidationError
 
 User = get_user_model()
 

@@ -8,3 +8,12 @@ def get_ingredients(request):
                 'valueIngredient_' + value_ingredient]
 
     return ingredients
+
+
+def get_subs_list(request):
+    user_author_list = request.user.follower.all()
+    user_subscriptions = []
+    for pair in user_author_list:
+        user_subscriptions.append(pair.author)
+
+    return user_subscriptions
