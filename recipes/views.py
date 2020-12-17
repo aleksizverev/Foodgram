@@ -7,8 +7,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_http_methods
 
 from .forms import RecipeForm
-from .models import Recipe, User, RecipeIngredient, Ingredient, Follow
-from .utils import get_ingredients, get_subs_list
+from .models import Recipe, User, RecipeIngredient, Ingredient, Follow, FavoriteRecipe
+from .utils import get_ingredients, get_subs_list, get_fav_list
 
 
 def index(request):
@@ -49,6 +49,7 @@ def recipe_view(request, recipe_id):
     recipe = get_object_or_404(Recipe, pk=recipe_id)
     ingredients = recipe.recipeingredient_set.all()
     follow_status = None
+    favorites_list = get_fav_list(request)
     if request.user.username:
         follow_status = Follow.objects.filter(
             user=request.user, author=recipe.author).exists()
@@ -57,7 +58,8 @@ def recipe_view(request, recipe_id):
         'user': request.user,
         'recipe': recipe,
         'ingredients': ingredients,
-        'follow_status': follow_status
+        'follow_status': follow_status,
+        'favorites_list': favorites_list
     })
 
 
@@ -97,7 +99,6 @@ def remove_subscription(request, author_id):
 
 @login_required
 def new_recipe(request):
-    new_recipe = True
 
     if request.method == 'POST':
         form = RecipeForm(request.POST, files=request.FILES or None)
@@ -124,19 +125,61 @@ def new_recipe(request):
         form = RecipeForm(files=request.FILES or None)
 
     return render(request, 'recipes/new_recipe.html', {
-        'form': form, 'new_recipe': new_recipe})
+        'form': form, 'new_recipe': True})
 
 
 @login_required
 def user_subscriptions(request):
     user_sub_list = get_subs_list(request)
-    print(user_sub_list)
     paginator = Paginator(user_sub_list, 6)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
 
-    return render(request, 'recipes/user_subscriptions.html', {
-        'page': page,
-        'paginator': paginator,
-        'subs': True
-    })
+    return render(
+        request,
+        'recipes/user_subscriptions.html',
+        {
+            'page': page,
+            'paginator': paginator,
+            'subs': True
+        }
+    )
+
+
+@login_required
+@require_http_methods(['POST'])
+def add_recipe_to_fav(request):
+    recipe_id = json.loads(request.body).get('id')
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+
+    FavoriteRecipe.objects.get_or_create(
+        user=request.user,
+        recipe=recipe
+    )
+    return JsonResponse({'success': True})
+
+
+@login_required
+@require_http_methods(['DELETE'])
+def del_recipe_from_fav(request, recipe_id):
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+    FavoriteRecipe.objects.filter(recipe=recipe, user=request.user).delete()
+    return JsonResponse({'success': True})
+
+
+@login_required
+def fav_recipes(request):
+    user_fav_recipes = get_fav_list(request)
+    paginator = Paginator(user_fav_recipes, 6)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
+
+    return render(
+        request,
+        'recipes/favorite.html',
+        {
+            'page': page,
+            'paginator': paginator,
+            'fav_page': True
+        }
+    )

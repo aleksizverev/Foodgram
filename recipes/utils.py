@@ -17,3 +17,12 @@ def get_subs_list(request):
         user_subscriptions.append(pair.author)
 
     return user_subscriptions
+
+
+def get_fav_list(request):
+    user_recipe_list = request.user.favorite_recipes.all()
+    user_favorites = []
+    for pair in user_recipe_list:
+        user_favorites.append(pair.recipe)
+
+    return user_favorites

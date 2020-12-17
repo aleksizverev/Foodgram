@@ -66,7 +66,7 @@ class Api {
       })
   }
   removeSubscriptions (id) {
-    return fetch(`/remove_subscription/${id}`, {
+    return fetch(`/remove_subscription/${id}/`, {
       method: 'DELETE',
       headers: {
           'Content-Type': 'application/json',
@@ -81,10 +81,11 @@ class Api {
       })
   }
   addFavorites (id)  {
-    return fetch(`/favorites`, {
+    return fetch(`/recipes/add_to_favorites/`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
       },
       body: JSON.stringify({
         id: id
@@ -98,10 +99,11 @@ class Api {
         })
   }
   removeFavorites (id) {
-    return fetch(`/favorites/${id}`, {
+    return fetch(`/recipes/del_from_favorites/${id}/`, {
       method: 'DELETE',
       headers: {
-        'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
       }
     })
         .then( e => {
