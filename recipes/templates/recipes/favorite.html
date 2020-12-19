@@ -4,6 +4,7 @@
 {% block static %} <link rel="stylesheet" href="{% static 'pages/index.css' %}"> {% endblock %}
 
 {% block content %}
+    {% csrf_token %}
     <div class="main__header">
         <h1 class="main__title">Избранное</h1>
         <ul class="tags">

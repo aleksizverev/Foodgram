@@ -7,8 +7,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_http_methods
 
 from .forms import RecipeForm
-from .models import Recipe, User, RecipeIngredient, Ingredient, Follow, FavoriteRecipe
-from .utils import get_ingredients, get_subs_list, get_fav_list
+from .models import Recipe, User, RecipeIngredient, Ingredient, Follow, FavoriteRecipe, ShoppingList
+from .utils import get_ingredients, get_subs_list, get_fav_list, get_shop_list
 
 
 def index(request):
@@ -17,13 +17,18 @@ def index(request):
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
 
+    fav_recipes = get_fav_list(request)
+    purchases = get_shop_list(request)
+
     return render(
         request,
         'recipes/index.html',
         {
             'user': request.user,
             'page': page,
-            'indx': True
+            'indx': True,
+            'fav_recipes': fav_recipes,
+            'purchases': purchases
         }
     )
 
@@ -50,6 +55,8 @@ def recipe_view(request, recipe_id):
     ingredients = recipe.recipeingredient_set.all()
     follow_status = None
     favorites_list = get_fav_list(request)
+    purchases = get_shop_list(request)
+
     if request.user.username:
         follow_status = Follow.objects.filter(
             user=request.user, author=recipe.author).exists()
@@ -59,7 +66,8 @@ def recipe_view(request, recipe_id):
         'recipe': recipe,
         'ingredients': ingredients,
         'follow_status': follow_status,
-        'favorites_list': favorites_list
+        'favorites_list': favorites_list,
+        'purchases': purchases,
     })
 
 
@@ -183,3 +191,36 @@ def fav_recipes(request):
             'fav_page': True
         }
     )
+
+
+@login_required
+def shopping_list(request):
+    shopping = True
+    purchases = get_shop_list(request)
+    return render(
+        request,
+        'recipes/shopping_list.html',
+        {
+            'shopping': shopping,
+            'purchases': purchases
+         }
+    )
+
+
+@login_required
+@require_http_methods(['POST'])
+def add_to_purchases(request):
+    recipe_id = json.loads(request.body).get('id')
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+    ShoppingList.objects.get_or_create(user=request.user, recipe=recipe)
+
+    return JsonResponse({'success': True})
+
+
+@login_required
+@require_http_methods(['DELETE'])
+def remove_from_purchases(request, recipe_id):
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+    ShoppingList.objects.filter(recipe=recipe, user=request.user).delete()
+
+    return JsonResponse({'success': True})

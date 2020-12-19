@@ -4,6 +4,9 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('add_purchases/', views.add_to_purchases, name='add_purchases'),
+    path('remove_purchases/<int:recipe_id>/', views.remove_from_purchases, name='remove_purchases'),
+    path('shopping_list/', views.shopping_list, name='shopping_list'),
     path('my_subscriptions/', views.user_subscriptions, name='user_subs'),
     path('recipes/del_from_favorites/<int:recipe_id>/', views.del_recipe_from_fav, name='del_from_fav'),
     path('<username>/', views.profile, name='profile'),
