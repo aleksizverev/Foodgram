@@ -73,11 +73,14 @@ def recipe_view(request, recipe_id):
 
 def ingredients(request):
     query = request.GET.get('query')
-    filtered_ingredients = Ingredient.objects.filter(title__icontains=query).all()
+    filtered_ingredients = Ingredient.objects.filter(
+        title__icontains=query).all()
     data = []
 
     for ingredient in filtered_ingredients:
-        data.append({'title': ingredient.title, 'dimension': ingredient.dimension})
+        data.append({
+            'title': ingredient.title, 'dimension': ingredient.dimension
+        })
 
     return JsonResponse(data, safe=False)
 
@@ -134,6 +137,48 @@ def new_recipe(request):
 
     return render(request, 'recipes/new_recipe.html', {
         'form': form, 'new_recipe': True})
+
+
+@login_required
+def recipe_edit(request, recipe_id):
+
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+
+    if request.user != recipe.author:
+        return redirect('recipe_page', recipe_id=recipe_id)
+
+    if request.method == 'POST':
+        form = RecipeForm(
+            request.POST, files=request.FILES or None, instance=recipe)
+        ingredients = get_ingredients(request)
+
+        if not bool(ingredients):
+            form.add_error(None, "Добавьте хотя бы один ингредиент")
+
+        if form.is_valid():
+            form.save()
+            recipe.recipeingredient_set.all().delete()
+            objs = [RecipeIngredient(
+                amount=amount, ingredient=Ingredient.objects.get(title=title),
+                recipe=recipe) for title, amount in ingredients.items()]
+
+            RecipeIngredient.objects.bulk_create(objs)
+            return redirect('recipe_view', recipe_id=recipe_id)
+    else:
+        form = RecipeForm(instance=recipe)
+
+    return render(
+        request, 'recipes/new_recipe.html',
+        {'form': form, 'new_recipe': True, 'edit': True})
+
+
+@login_required
+def delete_recipe(request, recipe_id):
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+    if request.user == recipe.author:
+        recipe.delete()
+        return redirect('profile', request.user)
+    return redirect('index')
 
 
 @login_required
