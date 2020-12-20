@@ -1,13 +1,16 @@
+import csv
 import json
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import F, Sum
 from django.http import JsonResponse
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect, HttpResponse
 from django.views.decorators.http import require_http_methods
 
 from .forms import RecipeForm
-from .models import Recipe, User, RecipeIngredient, Ingredient, Follow, FavoriteRecipe, ShoppingList
+from .models import Recipe, User, RecipeIngredient, Ingredient, Follow, \
+    FavoriteRecipe, ShoppingList
 from .utils import get_ingredients, get_subs_list, get_fav_list, get_shop_list
 
 
@@ -145,7 +148,7 @@ def recipe_edit(request, recipe_id):
     recipe = get_object_or_404(Recipe, pk=recipe_id)
 
     if request.user != recipe.author:
-        return redirect('recipe_page', recipe_id=recipe_id)
+        return redirect('recipe_view', recipe_id=recipe_id)
 
     if request.method == 'POST':
         form = RecipeForm(
@@ -240,13 +243,12 @@ def fav_recipes(request):
 
 @login_required
 def shopping_list(request):
-    shopping = True
     purchases = get_shop_list(request)
     return render(
         request,
         'recipes/shopping_list.html',
         {
-            'shopping': shopping,
+            'shopping': True,
             'purchases': purchases
          }
     )
@@ -269,3 +271,37 @@ def remove_from_purchases(request, recipe_id):
     ShoppingList.objects.filter(recipe=recipe, user=request.user).delete()
 
     return JsonResponse({'success': True})
+
+
+@login_required
+def download_shopping_list(request):
+    purchases = get_shop_list(request)
+    ingredients = {}
+
+    # for recipe in purchases:
+    #     ingredients.append(recipe.recipeingredient_set.all().annotate(
+    #         title=F('ingredient__title'),
+    #         dimension=F('ingredient__dimension')
+    #     ).values('title', 'dimension').annotate(
+    #         sums=Sum('amount')
+    #     ).order_by('title'))
+
+    for recipe in purchases:
+        for recipe_ingr in recipe.recipeingredient_set.all():
+            if recipe_ingr.ingredient.title not in ingredients.keys():
+                ingredients[recipe_ingr.ingredient.title] = [
+                    recipe_ingr.amount, recipe_ingr.ingredient.dimension]
+            else:
+                ingredients[recipe_ingr.ingredient.title][0] += recipe_ingr.amount
+
+    print(ingredients)
+
+    response = HttpResponse(content_type='text/txt')
+    response['Content-Disposition'] = 'attachment; filename="shop-list.txt"'
+
+    writer = csv.writer(response)
+
+    for key, value in ingredients.items():
+        writer.writerow([f'{key} ({value[1]}) - {value[0]}'])
+
+    return response

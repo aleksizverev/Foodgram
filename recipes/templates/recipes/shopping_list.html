@@ -26,8 +26,12 @@
                 </li>
             {% endfor %}
         </ul>
-        {% if shop_list %}
-            <a href="{% url 'download_shop_list' %}"><button class="button button_style_blue">Скачать список</button></a>
+        {% if shopping %}
+            <a href="{% url 'download_shopping_list' %}">
+                <button class="button button_style_blue">
+                    Скачать список
+                </button>
+            </a>
         {% endif %}
     </div>
 {% endblock %}
