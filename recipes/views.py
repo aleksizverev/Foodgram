@@ -288,14 +288,6 @@ def download_shopping_list(request):
     purchases = get_shop_list(request)
     ingredients = {}
 
-    # for recipe in purchases:
-    #     ingredients.append(recipe.recipeingredient_set.all().annotate(
-    #         title=F('ingredient__title'),
-    #         dimension=F('ingredient__dimension')
-    #     ).values('title', 'dimension').annotate(
-    #         sums=Sum('amount')
-    #     ).order_by('title'))
-
     for recipe in purchases:
         for recipe_ingr in recipe.recipeingredient_set.all():
             if recipe_ingr.ingredient.title not in ingredients.keys():
