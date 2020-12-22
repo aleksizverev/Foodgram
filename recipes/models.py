@@ -22,14 +22,16 @@ class Tag(models.Model):
 
 
 class Recipe(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recipes')
+    author = models.ForeignKey(User, on_delete=models.CASCADE,
+                               related_name='recipes')
     title = models.CharField(max_length=256)
     description = models.TextField(max_length=1024)
     image = models.ImageField(upload_to="recipes/", blank=False, null=True)
     cooking_time = models.IntegerField()
     ingredients = models.ManyToManyField(Ingredient, through='RecipeIngredient')
     tags = models.ManyToManyField(Tag, related_name='recipes')
-    pub_date = models.DateTimeField('date published', auto_now_add=True, null=True)
+    pub_date = models.DateTimeField('date published', auto_now_add=True,
+                                    null=True)
 
     def __str__(self):
         return self.title
@@ -42,8 +44,10 @@ class RecipeIngredient(models.Model):
 
 
 class Follow(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='follower')
+    author = models.ForeignKey(User, on_delete=models.CASCADE,
+                               related_name='following')
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
+                             related_name='follower')
 
     def __str__(self):
         return self.user.username

@@ -1,6 +1,3 @@
-from .models import ShoppingList
-
-
 def get_ingredients(request):
     ingredients = {}
     for key in request.POST:
