@@ -4,16 +4,18 @@
             <a href="{% url 'recipe_view' recipe.id %}" class="link" target="_blank"><img class="card-img" src="{{ im.url }}"></a>
         {% endthumbnail %}
     <div class="card__body">
-        <a class="card__title link" href="#" target="_blank">{{ recipe.title }}</a>
-        <ul class="card__items">
-            <li class="card__item"><span class="badge badge_style_green">Обед</span></li>
-            <li class="card__item"><span class="badge badge_style_orange">Завтрак</span></li>
-            <li class="card__item"><span class="badge badge_style_purple">Ужин</span></li>
-        </ul>
-        <div class="card__items card__items_column">
-            <p class="card__text"><span class="icon-time"></span> {{ recipe.cooking_time }} мин.</p>
-            <p class="card__text"><span class="icon-user"></span> <a href="{% url 'profile' recipe.author.username %}" style="color: black">{{ recipe.author.username }}</a></p>
-        </div>
+        <a class="card__title link" href="{% url 'recipe_view' recipe.id %}" target="_blank">
+            {{ recipe.title }}
+        </a>
+    <ul class="card__items">
+        {% for tag in recipe.tags.all %}
+            <li class="card__item">
+                <span class="badge badge_style_{{ tag.color }}">
+                    {{ tag.title }}
+                </span>
+            </li>
+        {% endfor %}
+    </ul>
     </div>
     <div class="card__footer">
         {% if user.is_authenticated %}

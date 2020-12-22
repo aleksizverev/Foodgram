@@ -26,15 +26,15 @@
                     {% endif %}
                 </div>
             </div>
-
-
             <ul class="single-card__items">
-                <li class="single-card__item"><span class="badge badge_style_green">Обед</span></li>
-                <li class="single-card__item"><span class="badge badge_style_orange">Завтрак</span></li>
-                <li class="single-card__item"><span class="badge badge_style_purple">Ужин</span></li>
+                {% for tag in tags %}
+                    <li class="single-card__item">
+                        <span class="badge badge_style_{{ tag.color }}">
+                            {{ tag.title }}
+                        </span>
+                    </li>
+                {% endfor %}
             </ul>
-
-
             <div class="single-card__items single-card__items_column">
                 <p class="single-card__text"><span class="icon-time"></span> {{ recipe.cooking_time }} мин.</p>
                 <ul class="single-card__items">

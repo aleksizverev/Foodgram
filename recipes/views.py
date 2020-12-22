@@ -3,19 +3,25 @@ import json
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import F, Sum
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect, HttpResponse
 from django.views.decorators.http import require_http_methods
 
 from .forms import RecipeForm
 from .models import Recipe, User, RecipeIngredient, Ingredient, Follow, \
-    FavoriteRecipe, ShoppingList
+    FavoriteRecipe, ShoppingList, Tag
 from .utils import get_ingredients, get_subs_list, get_fav_list, get_shop_list
 
 
 def index(request):
     recipes = Recipe.objects.order_by('-pub_date')
+    if 'filters' in request.GET:
+        filters = request.GET.getlist('filters')
+        print(filters)
+        recipes = Recipe.objects.filter(
+            tags__slug__in=filters).distinct().order_by('-pub_date')
+
+    tags = Tag.objects.all()
     paginator = Paginator(recipes, 6)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
@@ -31,7 +37,8 @@ def index(request):
             'page': page,
             'indx': True,
             'fav_recipes': fav_recipes,
-            'purchases': purchases
+            'purchases': purchases,
+            'tags': tags
         }
     )
 
@@ -64,6 +71,8 @@ def recipe_view(request, recipe_id):
         follow_status = Follow.objects.filter(
             user=request.user, author=recipe.author).exists()
 
+    tags = recipe.tags.all()
+
     return render(request, 'recipes/single_recipe_view.html', {
         'user': request.user,
         'recipe': recipe,
@@ -71,6 +80,7 @@ def recipe_view(request, recipe_id):
         'follow_status': follow_status,
         'favorites_list': favorites_list,
         'purchases': purchases,
+        'tags': tags
     })
 
 
