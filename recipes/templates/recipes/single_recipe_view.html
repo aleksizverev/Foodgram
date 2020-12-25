@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load recipe_filters %}
 {% block title %} Рецепт {% endblock %}
 {% block static %}
     <link rel="stylesheet" href="{% static 'pages/single.css' %}">
@@ -15,7 +16,8 @@
             <div class="single-card__header-info">
                 <h1 class="single-card__title">{{ recipe.title }}</h1>
                 <div class="single-card__favorite">
-                    {% if recipe in favorites_list %}
+                    {% in_favorites_list request.user recipe as in_fav %}
+                    {% if in_fav %}
                         <button class="button button_style_none" name="favorites">
                             <span class="icon-favorite icon-favorite_big icon-favorite_active"></span></button>
                         <div class="single-card__favorite-tooltip tooltip">Удалить из избранного</div>
@@ -38,12 +40,21 @@
             <div class="single-card__items single-card__items_column">
                 <p class="single-card__text"><span class="icon-time"></span> {{ recipe.cooking_time }} мин.</p>
                 <ul class="single-card__items">
-                    <li class="single-card__item"><p class="single-card__text"><span class="icon-user"></span> {{ recipe.author }} </p></li>
-                    <li class="single-card__item">  <a style="margin-left: 2.5em" href="{% url 'recipe_edit' recipe.id %}" class="single-card__text">Редактировать рецепт</a></li>
+                    <li class="single-card__item">
+                        <p class="single-card__text"><span class="icon-user"></span>
+                            {{ recipe.author.first_name }}
+                        </p>
+                    </li>
+                    <li class="single-card__item">
+                        <a style="margin-left: 2.5em" href="{% url 'recipe_edit' recipe.id %}" class="single-card__text">
+                            Редактировать рецепт
+                        </a>
+                    </li>
                 </ul>
             </div>
             <ul class="single-card__items">
-                {% if recipe not in purchases %}
+                {% in_shopping_list request.user recipe as in_purchases %}
+                {% if not in_purchases %}
                     <li class="single-card__item">
                         <button class="button button_style_blue" name="purchases" data-out>
                             <span class="icon-plus"></span> Добавить в покупки</button></li>
@@ -53,17 +64,18 @@
                             <span class="icon-check button__icon"></span>Рецепт добавлен</button></li>
                 {% endif %}
                 <li class="single-card__item">
-                {% if user.is_authenticated %}
-                    {% if user != recipe.author %}
-                        {% if not follow_status %}
-                            <button class="button button_style_light-blue button_size_subscribe" name="subscribe" data-out>
-                                Подписаться на автора
-                            </button>
-                        {% else %}
-                            <button class="button button_style_light-blue button_size_subscribe" name="subscribe">
-                                Отписаться от автора
-                            </button>
-                        {% endif %}
+                    {% if user.is_authenticated %}
+                        {% if user != recipe.author %}
+                        {% in_followers_list request.user recipe.author as follower %}
+                            {% if not follower %}
+                                <button class="button button_style_light-blue button_size_subscribe" name="subscribe" data-out>
+                                    Подписаться на автора
+                                </button>
+                            {% else %}
+                                <button class="button button_style_light-blue button_size_subscribe" name="subscribe">
+                                    Отписаться от автора
+                                </button>
+                            {% endif %}
                     {% endif %}
                 {% endif %}
                     {% csrf_token %}

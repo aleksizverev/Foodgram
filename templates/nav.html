@@ -2,15 +2,15 @@
     <div class="nav__container container">
         {% if user.is_authenticated %}
         <ul class="nav__items list">
-            <li class="nav__item {% if indx %} nav__item_active {% endif %}">
+            <li class="nav__item {% if 'index' == current_url %} nav__item_active {% endif %}">
                 <a href="{% url 'index' %}" class="nav__link link">Рецепты</a></li>
-            <li class="nav__item {% if subs %} nav__item_active {% endif %}">
+            <li class="nav__item {% if 'user_subs' == current_url %} nav__item_active {% endif %}">
                 <a href="{% url 'user_subs' %}" class="nav__link link">Мои подписки</a></li>
-            <li class="nav__item {% if new_recipe %} nav__item_active {% endif %}">
+            <li class="nav__item {% if 'new_recipe' == current_url %} nav__item_active {% endif %}">
                 <a href="{% url 'new_recipe' %}" class="nav__link link">Создать рецепт</a></li>
-            <li class="nav__item {% if fav_page %} nav__item_active {% endif %}">
+            <li class="nav__item {% if 'fav_recipes' == current_url %} nav__item_active {% endif %}">
                 <a href="{% url 'fav_recipes' %}" class="nav__link link">Избранное</a></li>
-            <li class="nav__item {% if shopping %} nav__item_active {% endif %}">
+            <li class="nav__item {% if 'shopping_list' == current_url %} nav__item_active {% endif %}">
                 <a href="{% url 'shopping_list' %}" class="nav__link link">Список покупок</a>
                 <span class="badge badge_style_blue nav__badge" id="counter">{{ user.shopping_list.count }}</span></li>
         </ul>
