@@ -1,4 +1,5 @@
 {% load thumbnail %}
+{% load recipe_filters %}
 <div class="card" data-id={{ recipe.id }}>
         {% thumbnail recipe.image "400x220" crop="center" upscale=True as im %}
             <a href="{% url 'recipe_view' recipe.id %}" class="link" target="_blank"><img class="card-img" src="{{ im.url }}"></a>
@@ -7,26 +8,36 @@
         <a class="card__title link" href="{% url 'recipe_view' recipe.id %}" target="_blank">
             {{ recipe.title }}
         </a>
-    <ul class="card__items">
-        {% for tag in recipe.tags.all %}
-            <li class="card__item">
-                <span class="badge badge_style_{{ tag.color }}">
-                    {{ tag.title }}
-                </span>
-            </li>
-        {% endfor %}
-    </ul>
+        <ul class="card__items">
+            {% for tag in recipe.tags.all %}
+                <li class="card__item">
+                    <span class="badge badge_style_{{ tag.color }}">
+                        {{ tag.title }}
+                    </span>
+                </li>
+            {% endfor %}
+        </ul>
+        <div class="card__items card__items_column">
+                <p class="card__text"><span class="icon-time"></span> {{ recipe.cooking_time }} мин.</p>
+                <p class="card__text"><span class="icon-user"></span>
+                    <a href="{% url 'profile' recipe.author.username %}" style="color: black">
+                        {{ recipe.author.first_name }}
+                    </a>
+                </p>
+        </div>
     </div>
     <div class="card__footer">
         {% if user.is_authenticated %}
-            {% if recipe not in purchases %}
+            {% in_shopping_list request.user recipe as in_purchases %}
+            {% if not in_purchases %}
                 <button class="button button_style_light-blue" name="purchases" data-out>
                     <span class="icon-plus button__icon"></span>Добавить в покупки</button>
             {% else %}
                 <button class="button button_style_light-blue-outline" name="purchases">
                     <span class="icon-check button__icon"></span>Рецепт добавлен</button>
             {% endif %}
-            {% if recipe not in fav_recipes %}
+            {% in_favorites_list request.user recipe as in_fav %}
+            {% if not in_fav %}
                 <button class="button button_style_none" name="favorites" data-out>
                     <span class="icon-favorite"></span></button>
             {% else %}

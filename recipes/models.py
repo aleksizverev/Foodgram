@@ -43,14 +43,27 @@ class RecipeIngredient(models.Model):
     amount = models.IntegerField()
 
 
+class UserSubscriptionsQuerySet(models.QuerySet):
+    def get_subs_list(self, user):
+        return user.follower.only('author')
+
+
 class Follow(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE,
                                related_name='following')
     user = models.ForeignKey(User, on_delete=models.CASCADE,
                              related_name='follower')
 
+    objects = models.Manager()
+    subscriptions = UserSubscriptionsQuerySet.as_manager()
+
     def __str__(self):
         return self.user.username
+
+
+class UserFavoriteRecipesQuerySet(models.QuerySet):
+    def get_fav_recipes(self, user):
+        return user.favorite_recipes.only('recipe')
 
 
 class FavoriteRecipe(models.Model):
@@ -63,8 +76,16 @@ class FavoriteRecipe(models.Model):
         null=True
     )
 
+    objects = models.Manager()
+    fav_recipes = UserFavoriteRecipesQuerySet.as_manager()
+
     def __str__(self):
         return f'Избранные рецепты {self.user}'
+
+
+class UserShopListQuerySet(models.QuerySet):
+    def get_shopping_list(self, user):
+        return user.shopping_list.only('recipe')
 
 
 class ShoppingList(models.Model):
@@ -74,6 +95,9 @@ class ShoppingList(models.Model):
     recipe = models.ForeignKey(
         Recipe, related_name='shopping_list', null=True,
         on_delete=models.CASCADE)
+
+    objects = models.Manager()
+    shop_list = UserShopListQuerySet.as_manager()
 
     def __str__(self):
         return f'Список покупок {self.user}'

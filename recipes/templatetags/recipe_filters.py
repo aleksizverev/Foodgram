@@ -32,3 +32,18 @@ def get_filtered_tags(request, tag):
     else:
         new_request.appendlist('filters', tag.slug)
     return new_request.urlencode()
+
+
+@register.simple_tag
+def in_favorites_list(user, recipe):
+    return user.favorite_recipes.filter(recipe=recipe).exists()
+
+
+@register.simple_tag
+def in_shopping_list(user, recipe):
+    return user.shopping_list.filter(recipe=recipe).exists()
+
+
+@register.simple_tag
+def in_followers_list(user, author):
+    return user.follower.filter(author=author).exists()

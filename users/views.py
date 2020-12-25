@@ -1,6 +1,5 @@
 from django.contrib.auth import login
-from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 from users.forms import CustomCreationForm
 
@@ -14,6 +13,6 @@ def sign_up(request):
             user.set_password(user.password)
             user.save()
             login(request, user)
-            return HttpResponseRedirect('/')
+            return redirect('index')
     context['form'] = form
     return render(request, 'registration/sing_up.html', context)

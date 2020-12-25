@@ -1,33 +1,34 @@
-import csv
 import json
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import F, Sum
 from django.http import JsonResponse
-from django.shortcuts import render, get_object_or_404, redirect, HttpResponse
+from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import resolve
 from django.views.decorators.http import require_http_methods
 
+from foodgram.settings import PAGINATE_BY
 from .forms import RecipeForm
 from .models import Recipe, User, RecipeIngredient, Ingredient, Follow, \
     FavoriteRecipe, ShoppingList, Tag
-from .utils import get_ingredients, get_subs_list, get_fav_list, get_shop_list
+from .utils import get_ingredients, create_shopping_list_response
 
 
 def index(request):
     recipes = Recipe.objects.order_by('-pub_date')
+
     if 'filters' in request.GET:
         filters = request.GET.getlist('filters')
-        print(filters)
         recipes = Recipe.objects.filter(
             tags__slug__in=filters).distinct().order_by('-pub_date')
 
     tags = Tag.objects.all()
-    paginator = Paginator(recipes, 6)
+    paginator = Paginator(recipes, PAGINATE_BY)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
 
-    fav_recipes = get_fav_list(request)
-    purchases = get_shop_list(request)
+    current_url = resolve(request.path).url_name
 
     return render(
         request,
@@ -35,9 +36,7 @@ def index(request):
         {
             'user': request.user,
             'page': page,
-            'indx': True,
-            'fav_recipes': fav_recipes,
-            'purchases': purchases,
+            'current_url': current_url,
             'tags': tags
         }
     )
@@ -46,7 +45,7 @@ def index(request):
 def profile(request, username):
     profile = get_object_or_404(User, username=username)
     profile_recipes = profile.recipes.order_by('-pub_date')
-    paginator = Paginator(profile_recipes, 6)
+    paginator = Paginator(profile_recipes, PAGINATE_BY)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
 
@@ -63,39 +62,21 @@ def profile(request, username):
 def recipe_view(request, recipe_id):
     recipe = get_object_or_404(Recipe, pk=recipe_id)
     ingredients = recipe.recipeingredient_set.all()
-    follow_status = None
-    favorites_list = get_fav_list(request)
-    purchases = get_shop_list(request)
-
-    if request.user.username:
-        follow_status = Follow.objects.filter(
-            user=request.user, author=recipe.author).exists()
-
     tags = recipe.tags.all()
 
     return render(request, 'recipes/single_recipe_view.html', {
         'user': request.user,
         'recipe': recipe,
         'ingredients': ingredients,
-        'follow_status': follow_status,
-        'favorites_list': favorites_list,
-        'purchases': purchases,
         'tags': tags
     })
 
 
-def ingredients(request):
+def get_requested_ingredients(request):
     query = request.GET.get('query')
-    filtered_ingredients = Ingredient.objects.filter(
-        title__icontains=query).all()
-    data = []
-
-    for ingredient in filtered_ingredients:
-        data.append({
-            'title': ingredient.title, 'dimension': ingredient.dimension
-        })
-
-    return JsonResponse(data, safe=False)
+    filtered_ingredients = list(Ingredient.objects.filter(
+        title__icontains=query).values('title', 'dimension'))
+    return JsonResponse(filtered_ingredients, safe=False)
 
 
 @login_required
@@ -126,10 +107,9 @@ def new_recipe(request):
 
     if request.method == 'POST':
         form = RecipeForm(request.POST, files=request.FILES or None)
-        ingredients = get_ingredients(request)
+        ingredients = get_ingredients(request.POST)
 
         if not bool(ingredients):
-            print("Добавьте хотя бы один ингредиент")
             form.add_error(None, "Добавьте хотя бы один ингредиент")
 
         elif form.is_valid():
@@ -148,8 +128,10 @@ def new_recipe(request):
     else:
         form = RecipeForm(files=request.FILES or None)
 
+    current_url = resolve(request.path).url_name
+
     return render(request, 'recipes/new_recipe.html', {
-        'form': form, 'new_recipe': True})
+        'form': form, 'current_url': current_url})
 
 
 @login_required
@@ -163,7 +145,7 @@ def recipe_edit(request, recipe_id):
     if request.method == 'POST':
         form = RecipeForm(
             request.POST, files=request.FILES or None, instance=recipe)
-        ingredients = get_ingredients(request)
+        ingredients = get_ingredients(request.POST)
 
         if not bool(ingredients):
             form.add_error(None, "Добавьте хотя бы один ингредиент")
@@ -196,10 +178,12 @@ def delete_recipe(request, recipe_id):
 
 @login_required
 def user_subscriptions(request):
-    user_sub_list = get_subs_list(request)
-    paginator = Paginator(user_sub_list, 6)
+    user_sub_list = Follow.subscriptions.get_subs_list(request.user)
+    paginator = Paginator(user_sub_list, PAGINATE_BY)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
+
+    current_url = resolve(request.path).url_name
 
     return render(
         request,
@@ -207,7 +191,7 @@ def user_subscriptions(request):
         {
             'page': page,
             'paginator': paginator,
-            'subs': True
+            'current_url': current_url
         }
     )
 
@@ -235,30 +219,43 @@ def del_recipe_from_fav(request, recipe_id):
 
 @login_required
 def fav_recipes(request):
-    user_fav_recipes = get_fav_list(request)
-    paginator = Paginator(user_fav_recipes, 6)
+    user_fav_recipes = FavoriteRecipe.fav_recipes.get_fav_recipes(
+        request.user).order_by('-recipe__pub_date')
+
+    if 'filters' in request.GET:
+        filters = request.GET.getlist('filters')
+        user_fav_recipes = user_fav_recipes.filter(
+            recipe__tags__slug__in=filters).distinct().order_by(
+            '-recipe__pub_date')
+
+    paginator = Paginator(user_fav_recipes, PAGINATE_BY)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
 
+    current_url = resolve(request.path).url_name
+    tags = Tag.objects.all()
+
     return render(
         request,
-        'recipes/favorite.html',
+        'recipes/favorite_recipes.html',
         {
             'page': page,
             'paginator': paginator,
-            'fav_page': True
+            'current_url': current_url,
+            'tags': tags
         }
     )
 
 
 @login_required
 def shopping_list(request):
-    purchases = get_shop_list(request)
+    purchases = ShoppingList.shop_list.get_shopping_list(request.user)
+    current_url = resolve(request.path).url_name
     return render(
         request,
         'recipes/shopping_list.html',
         {
-            'shopping': True,
+            'current_url': current_url,
             'purchases': purchases
          }
     )
@@ -285,25 +282,17 @@ def remove_from_purchases(request, recipe_id):
 
 @login_required
 def download_shopping_list(request):
-    purchases = get_shop_list(request)
-    ingredients = {}
+    purchases = ShoppingList.shop_list.get_shopping_list(request.user)
 
-    for recipe in purchases:
-        for recipe_ingr in recipe.recipeingredient_set.all():
-            if recipe_ingr.ingredient.title not in ingredients.keys():
-                ingredients[recipe_ingr.ingredient.title] = [
-                    recipe_ingr.amount, recipe_ingr.ingredient.dimension]
-            else:
-                ingredients[recipe_ingr.ingredient.title][0] += recipe_ingr.amount
+    ingredients_list = purchases.annotate(
+        title=F('recipe__recipeingredient__ingredient__title'),
+        dimension=F('recipe__recipeingredient__ingredient__dimension')
+    ).values(
+        'title', 'dimension'
+    ).annotate(
+        total=Sum('recipe__recipeingredient__amount')
+    ).order_by('title')
 
-    print(ingredients)
-
-    response = HttpResponse(content_type='text/txt')
-    response['Content-Disposition'] = 'attachment; filename="shop-list.txt"'
-
-    writer = csv.writer(response)
-
-    for key, value in ingredients.items():
-        writer.writerow([f'{key} ({value[1]}) - {value[0]}'])
+    response = create_shopping_list_response(ingredients_list)
 
     return response

@@ -1,41 +1,30 @@
-def get_ingredients(request):
+import csv
+
+from django.shortcuts import HttpResponse
+
+
+def get_ingredients(post_request_elements):
     ingredients = {}
-    for key in request.POST:
+    for key in post_request_elements:
         if key.startswith('nameIngredient'):
             value_ingredient = key[15:]
 
-            ingredients[request.POST[key]] = request.POST[
+            ingredients[post_request_elements[key]] = post_request_elements[
                 'valueIngredient_' + value_ingredient]
 
     return ingredients
 
 
-def get_subs_list(request):
-    user_subscriptions = []
-    if request.user.is_authenticated:
-        user_author_list = request.user.follower.all()
-        for pair in user_author_list:
-            user_subscriptions.append(pair.author)
+def create_shopping_list_response(ingredients_list):
+    response = HttpResponse(content_type='text/txt')
 
-    return user_subscriptions
+    response['Content-Disposition'] = 'attachment; filename="shop-list.txt"'
 
+    writer = csv.writer(response)
+    for ingredient in ingredients_list:
+        title = ingredient['title']
+        dimension = ingredient['dimension']
+        total = ingredient['total']
+        writer.writerow([f'{title} ({dimension}) - {total}'])
 
-def get_fav_list(request):
-    user_favorites = []
-    if request.user.is_authenticated:
-        user_recipe_list = request.user.favorite_recipes.all()
-        for pair in user_recipe_list:
-            user_favorites.append(pair.recipe)
-
-    return user_favorites
-
-
-def get_shop_list(request):
-    purchases = []
-    if request.user.is_authenticated:
-
-        user_purchases = request.user.shopping_list.all()
-        for pair in user_purchases:
-            purchases.append(pair.recipe)
-
-    return purchases
+    return response
