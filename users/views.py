@@ -14,5 +14,6 @@ def sign_up(request):
             user.save()
             login(request, user)
             return redirect('index')
+
     context['form'] = form
     return render(request, 'registration/sing_up.html', context)
