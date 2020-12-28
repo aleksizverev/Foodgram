@@ -1,6 +1,6 @@
-# Foodgram
-![foodgram](https://github.com/aleksizverev/foodgram-project/workflows/foodgram%20workflow/badge.svg) 
-[Link to the site]**http://84.201.130.188/** 
+# Foodgram  
+![foodgram](https://github.com/aleksizverev/foodgram-project/workflows/foodgram%20workflow/badge.svg)  
+[Link to the site]**http://84.201.130.188/**   
 This is a site where you can became an author and create your own recipes as well as subscribe to others.  
 Choosing your favorite recipes is also avaliable. Moreover, you can form a shopping list and download it.
 
