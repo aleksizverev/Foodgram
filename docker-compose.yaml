@@ -14,6 +14,7 @@ services:
       - ./.env
   web:
     image: aleksizverev/foodgram-project:latest
+    command: gunicorn foodgram-project.wsgi:application --bind 0.0.0.0:8000
     restart: always
     volumes: 
       - ./static_volume:/code/static/
@@ -22,6 +23,9 @@ services:
       - db
     env_file:
       - ./.env
+    expose:
+    - 8000
+      
   nginx:
     image: nginx:1.19.4
     restart: unless-stopped
