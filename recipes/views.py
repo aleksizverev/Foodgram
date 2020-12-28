@@ -45,16 +45,25 @@ def index(request):
 def profile(request, username):
     profile = get_object_or_404(User, username=username)
     profile_recipes = profile.recipes.order_by('-pub_date')
+
+    if 'filters' in request.GET:
+        filters = request.GET.getlist('filters')
+        profile_recipes = profile_recipes.filter(
+            tags__slug__in=filters).distinct().order_by('-pub_date')
+
     paginator = Paginator(profile_recipes, PAGINATE_BY)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
+
+    tags = Tag.objects.all()
 
     return render(
         request,
         'recipes/profile.html',
         {
             'profile': profile,
-            'page': page
+            'page': page,
+            'tags': tags
         }
     )
 

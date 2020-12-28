@@ -17,4 +17,5 @@ sorl-thumbnail==12.7.0
 sqlparse==0.4.1
 traitlets==5.0.5
 wcwidth==0.2.5
-wsgi
+gunicorn==20.0.4
+psycopg2-binary==2.8.5
