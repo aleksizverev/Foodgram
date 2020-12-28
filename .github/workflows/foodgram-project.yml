@@ -62,8 +62,8 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-           cd yamdb_final
-           sudo docker rmi aleksizverev/foodgram-project -f
+           cd ~ 
+           sudo docker rmi foodgram-project -f
            sudo docker pull aleksizverev/foodgram-project:latest
            sudo docker-compose up --force-recreate -d web
        
@@ -77,4 +77,4 @@ jobs:
        with:
          to: ${{ secrets.TELEGRAM_TO }}
          token: ${{ secrets.TELEGRAM_TOKEN }}
-         message: $ YaMDb workflow успешно выполнен!
+         message: $ Foodgram workflow успешно выполнен!
