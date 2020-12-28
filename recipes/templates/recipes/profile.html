@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %} Рецепты {% endblock %}
+{% load recipe_filters %}
 
 {% block static %}
     <link rel="stylesheet" href="{% static 'pages/index.css' %}">
@@ -11,6 +12,22 @@
         <h1 class="main__title">{{ profile.first_name }}</h1>
         {% include 'tags.html' with tags=tags %}
     </div>
+    {% if request.user.is_authenticated %}
+        {% if request.user != profile %}
+            <div class="author-subscribe" data-author="{{ profile.id }}">
+            {% in_followers_list request.user profile as follower %}
+            {% if not follower %}
+                <p style="padding: 0 0 1em 0;">
+                    <button class="button button_style_light-blue button_size_subscribe button_style_blue"
+                    name="subscribe" data-out>Подписаться на автора</button></p>
+            {% else %}
+                <p style="padding: 0 0 1em 0;">
+                    <button class="button button_style_light-blue button_size_subscribe"
+                    name="subscribe">Отписаться от автора</button></p>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+        {% csrf_token %}
     <div class="card-list">
     {% load thumbnail %}
         {% for recipe in page %}
@@ -35,7 +52,6 @@
   <script src="{% static 'js/components/Header.js' %}"></script>
 
   <script src="{% static 'js/api/Api.js' %}"></script>
-  <script src="{% static 'authorRecipe.html' %}"></script>
-{% endblock %}
+    <script src="{% static 'authorRecipe.js' %}"></script>
 
-{# todo кнопку подписки ! #}
+{% endblock %}
