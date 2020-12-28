@@ -63,7 +63,8 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
            cd yamdb_final
-           sudo docker-compose pull web
+           sudo docker rmi aleksizverev/foodgram-project -f
+           sudo docker pull aleksizverev/foodgram-project:latest
            sudo docker-compose up --force-recreate -d web
        
  
