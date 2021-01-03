@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block static %} <link rel="stylesheet" href={% static  "pages/index.css" %}> {% endblock %}
+{% block content %}
+    <div class="custom-center-block">
+            <p class="custom-text-block">
+                Привет! Меня зовут Алексей Зверев. Я автор этого проекта!
+                <br>
+                Я учусь на физическом факультете МГУ и люблю программировать! Буду рад услышать любую конструктивную критику по проекту.
+                <br>
+                <br>
+                Если у Вас есть предложения, то связаться со мной можно в telegram: @aleksi_zverev
+                или по почте: aleksizverev@gmail.com
+            </p>
+        <div class="custom-button-block">
+            <button class="button button_style_blue">
+                <a class="nav__link link" href="{% url 'index' %}">Перейти на главную</a>
+            </button>
+        </div>
+    </div>
+{% endblock %}

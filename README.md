@@ -22,9 +22,10 @@ Make migrations:
 ```
 python manage.py migrate
 ```
-Collect static:  
+Collect static and create tags:  
 ```
-python manage.py collectstatic
+python manage.py collectstatic  
+python manage.py create_tags
 ```
 Create a superuser:
 ```
