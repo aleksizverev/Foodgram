@@ -21,7 +21,7 @@
         </ul>
         {% else %}
         <ul class="nav__items list">
-            <li class="nav__item {% if indx %} nav__item_active {% endif %}">
+            <li class="nav__item {% if 'index' == current_url %} nav__item_active {% endif %}">
                 <a href="{% url 'index' %}" class="nav__link link">Рецепты</a></li>
         </ul>
         <ul class="nav__items list">
