@@ -13,6 +13,7 @@ from .forms import RecipeForm
 from .models import Recipe, User, RecipeIngredient, Ingredient, Follow, \
     FavoriteRecipe, ShoppingList, Tag
 from .utils import get_ingredients, create_shopping_list_response
+from django.core.exceptions import ValidationError
 
 
 def index(request):
@@ -113,15 +114,17 @@ def remove_subscription(request, author_id):
 
 @login_required
 def new_recipe(request):
+    current_url = resolve(request.path).url_name
 
     if request.method == 'POST':
         form = RecipeForm(request.POST, files=request.FILES or None)
         ingredients = get_ingredients(request.POST)
 
         if not bool(ingredients):
-            form.add_error(None, "Добавьте хотя бы один ингредиент")
+            form.add_error(None, ValidationError(
+                "Добавьте хотя бы один ингредиент"))
 
-        elif form.is_valid():
+        if form.is_valid():
             recipe = form.save(commit=False)
             recipe.author = request.user
             recipe.save()
@@ -133,11 +136,8 @@ def new_recipe(request):
             RecipeIngredient.objects.bulk_create(objs)
             form.save_m2m()
             return redirect('recipe_view', recipe_id=recipe.id)
-
     else:
-        form = RecipeForm(files=request.FILES or None)
-
-    current_url = resolve(request.path).url_name
+        form = RecipeForm(request.FILES or None)
 
     return render(request, 'recipes/new_recipe.html', {
         'form': form, 'current_url': current_url})
