@@ -15,6 +15,7 @@
         <div class="single-card__info">
             <div class="single-card__header-info">
                 <h1 class="single-card__title">{{ recipe.title }}</h1>
+            {% if user.is_authenticated %}
                 <div class="single-card__favorite">
                     {% in_favorites_list request.user recipe as in_fav %}
                     {% if in_fav %}
@@ -27,6 +28,7 @@
                         <div class="single-card__favorite-tooltip tooltip">Добавить в избранное</div>
                     {% endif %}
                 </div>
+            {% endif %}
             </div>
             <ul class="single-card__items">
                 {% for tag in tags %}
@@ -45,13 +47,18 @@
                             {{ recipe.author.first_name }}
                         </p>
                     </li>
-                    <li class="single-card__item">
-                        <a style="margin-left: 2.5em" href="{% url 'recipe_edit' recipe.id %}" class="single-card__text">
-                            Редактировать рецепт
-                        </a>
-                    </li>
+                    {% if user.is_authenticated %}
+                        {% if request.user == recipe.author %}
+                        <li class="single-card__item">
+                            <a style="margin-left: 2.5em" href="{% url 'recipe_edit' recipe.id %}" class="single-card__text">
+                                Редактировать рецепт
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endif %}
                 </ul>
             </div>
+        {% if user.is_authenticated %}
             <ul class="single-card__items">
                 {% in_shopping_list request.user recipe as in_purchases %}
                 {% if not in_purchases %}
@@ -63,8 +70,9 @@
                         <button class="button button_style_light-blue-outline" name="purchases">
                             <span class="icon-check button__icon"></span>Рецепт добавлен</button></li>
                 {% endif %}
+            {% endif %}
+        {% if user.is_authenticated %}
                 <li class="single-card__item">
-                    {% if user.is_authenticated %}
                         {% if user != recipe.author %}
                         {% in_followers_list request.user recipe.author as follower %}
                             {% if not follower %}
@@ -77,9 +85,9 @@
                                 </button>
                             {% endif %}
                     {% endif %}
-                {% endif %}
                     {% csrf_token %}
                 </li>
+        {% endif %}
             </ul>
             <div class="single-card__section">
                 <h3 class="single-card__section-title">Ингридиенты:</h3>

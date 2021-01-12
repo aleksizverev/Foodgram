@@ -87,6 +87,11 @@
                     {% endif %}
                     </div>
                     <span class="form__ingredient-link" id="addIng">Добавить ингредиент</span>
+                        {% if form.errors %}
+                            {% for error in field.errors %}
+                                <span class="form__error">{{ error|escape }}</span>
+                            {% endfor %}
+                        {% endif %}
                     <span class="form__error"></span>
                 </div>
             </div>
@@ -124,6 +129,13 @@
                     {% endif %}
                 </div>
             </div>
+            {% if form.errors %}
+                {% for error in form.non_field_errors %}
+                    <div class="form__group">
+                    <span class="form__error">{{ error|escape }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
             <div class="form__footer">
                 {% if edit %}
                     <button class="button button_style_blue">Сохранить рецепт</button>
