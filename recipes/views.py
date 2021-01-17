@@ -58,13 +58,16 @@ def profile(request, username):
 
     tags = Tag.objects.all()
 
+    current_url = resolve(request.path).url_name
+
     return render(
         request,
         'recipes/profile.html',
         {
             'profile': profile,
             'page': page,
-            'tags': tags
+            'tags': tags,
+            'current_url': current_url
         }
     )
 
