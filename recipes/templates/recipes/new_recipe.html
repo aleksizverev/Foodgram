@@ -101,7 +101,7 @@
                     {{ form.cooking_time|addclass:"form__input" }}
                     <label for="id_time" class="form__label">минут</label>
                     {% if form.errors %}
-                        {% for error in form.cook_time.errors %}
+                        {% for error in form.cooking_time.errors %}
                             <span class="form__error">{{ error|escape }}</span>
                         {% endfor %}
                     {% endif %}

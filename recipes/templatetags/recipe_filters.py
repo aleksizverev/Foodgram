@@ -1,4 +1,6 @@
 from django import template
+from django.utils.http import urlencode
+from django.http.request import QueryDict
 
 register = template.Library()
 
@@ -23,6 +25,10 @@ def get_filter_values(element):
 @register.filter
 def get_filtered_tags(request, tag):
     new_request = request.GET.copy()
+
+    if 'page' in new_request:
+        del new_request['page']
+
     if tag.slug in request.GET.getlist('filters'):
 
         filters = new_request.getlist('filters')
