@@ -1,6 +1,6 @@
 # Foodgram  
 This is a site where you can became an author and create your own recipes as well as subscribe to others.  
-Choosing your favorite recipes is also avaliable. Moreover, you can form a shopping list and download it.
+Choosing your favorite recipes is also available. Moreover, you can form a shopping list and download it.
 
 ## Getting Started
 *Adapt .env as you need*  
